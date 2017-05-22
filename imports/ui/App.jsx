@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { createContainer } from 'meteor/react-meteor-data';
  
 import { Tasks } from '../api/tasks.js';
+import AccountsUIWrapper from './AccountsUIWrapper.jsx';
  
 import Task from './Task.jsx';
  
@@ -23,18 +24,12 @@ class App extends Component {
     Tasks.insert({
       text,
       createdAt: new Date(), // current time
+      owner: Meteor.userId(),           // _id of logged in user
+      username: Meteor.user().username,  // username of logged in user
     });
  
     // Clear form
     ReactDOM.findDOMNode(this.refs.textInput).value = '';
-  }
-
-  getTasks() {
-    return [
-      { _id: 1, text: 'This is task 1' },
-      { _id: 2, text: 'This is task 2' },
-      { _id: 3, text: 'This is task 3' },
-    ];
   }
 
   toggleHideCompleted() {
@@ -67,6 +62,7 @@ class App extends Component {
             />
             Hide Completed Tasks
           </label>
+          <AccountsUIWrapper />
           <form className="new-task" onSubmit={this.handleSubmit.bind(this)} >
             <input
               type="text"
@@ -86,11 +82,14 @@ class App extends Component {
 
 App.propTypes = {
   tasks: PropTypes.array.isRequired,
+  incompleteCount: PropTypes.number.isRequired,
+  currentUser: PropTypes.object,
 };
  
 export default createContainer(() => {
   return {
     tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
     incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
+    currentUser: Meteor.user(),
   };
 }, App);
